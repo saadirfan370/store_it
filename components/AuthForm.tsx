@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { createAccount } from "@/lib/actions/user.action";
 
 type FormType = "sign-up" | "sign-in";
 
@@ -32,6 +33,7 @@ const authFormSchema = (formType: FormType) => {
 const AuthForm = ({ type }: { type: FormType }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [accountId,setAccount]
 
   const formSchema = authFormSchema(type);
 
@@ -48,7 +50,11 @@ const AuthForm = ({ type }: { type: FormType }) => {
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
-    console.log(values);
+    setIsLoading(true);
+    const user = createAccount({
+      fullName: values.fullName ?? "",
+      email: values.email,
+    });
   };
 
   return (
