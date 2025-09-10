@@ -1,23 +1,23 @@
+"use client";
 import React, { useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
   InputOTP,
   InputOTPGroup,
-  InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import Image from "next/image";
 import { Button } from "./ui/button";
+import { verifySecret, sendEmailOTP } from "@/lib/actions/user.action";
+import { useRouter } from "next/navigation";
 
 const OTpModal = ({
   email,
@@ -26,6 +26,7 @@ const OTpModal = ({
   email: string;
   accountId: string;
 }) => {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(true);
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -35,13 +36,20 @@ const OTpModal = ({
     setIsLoading(true);
     try {
       // call api verify OTP
+      const sessionId = await verifySecret({ accountId, password });
+      if (sessionId) {
+        router.push("/");
+      }
     } catch (error) {
       console.log("Failed to verify OTP", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleResendOtp = async () => {
     // call api to resend OTP
+    await sendEmailOTP({ email });
   };
 
   return (
@@ -97,10 +105,15 @@ const OTpModal = ({
                 )}
               </AlertDialogAction>
 
-              <div>
+              <div className="subtitle-2 mt-2 text-center text-light-100">
                 Didn&apos;t get a code?
-                <Button type="button" variant='link' className="pl-1 text-brand" onClick={handleResendOtp}>
-                    Click to resend
+                <Button
+                  type="button"
+                  variant="link"
+                  className="pl-1 text-brand"
+                  onClick={handleResendOtp}
+                >
+                  Click to resend
                 </Button>
               </div>
             </div>
