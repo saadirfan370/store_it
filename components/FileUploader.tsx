@@ -5,24 +5,55 @@ import { Button } from "./ui/button";
 import { cn, convertFileToUrl, getFileType } from "@/lib/utils";
 import Image from "next/image";
 import Thumbnail from "./Thumbnail";
+import { MAX_FILE_SIZE } from "@/constants";
+import { toast } from "sonner";
+import { uploadFile } from "@/lib/actions/file.actions";
+import { usePathname } from "next/navigation";
 
 interface Props {
   ownerId: string;
   accountId: string;
-  classNames: string;
+  classNames?: string;
 }
 
 const FileUploader = ({ ownerId, accountId, classNames }: Props) => {
+  const path = usePathname();
   const [files, setFiles] = useState<File[]>([]);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    // Do something with the files
-    setFiles(acceptedFiles);
-  }, []);
+  const onDrop = useCallback(
+    async (acceptedFiles: File[]) => {
+      // Do something with the files
+      setFiles(acceptedFiles);
+      const uploadPromises = acceptedFiles.map(async (file) => {
+        if (file.size > MAX_FILE_SIZE) {
+          setFiles((prevFiles) =>
+            prevFiles.filter((f) => f.name !== file.name)
+          );
+
+          return toast.error(
+            `File ${file.name} exceeds the maximum size of ${MAX_FILE_SIZE / (1024 * 1024)} MB. max file size is 5MB`
+          );
+        }
+
+        return uploadFile({ file, ownerId, accountId, path }).then(
+          (uploadedFile) => {
+            if (uploadedFile) {
+              setFiles((prevFiles) =>
+                prevFiles.filter((f) => f.name !== file.name)
+              );
+              toast.success(`File ${file.name} uploaded successfully`);
+            }
+          }
+        );
+      });
+      await Promise.all(uploadPromises);
+    },
+    [ownerId, accountId, path]
+  );
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
   const handleRemoveFile = (
-    e: React.MouseEvent<HTMLImageElement>,
+    e: React.MouseEvent<HTMLImageElement, MouseEvent>,
     fileName: string
   ) => {
     e.stopPropagation();
@@ -59,7 +90,7 @@ const FileUploader = ({ ownerId, accountId, classNames }: Props) => {
                   />
 
                   <div className="preview-item-name">
-                    {file.name}
+                    <span className="line-clamp-1">{file.name}</span>
                     <Image
                       src={"/assets/icons/file-loader.gif"}
                       alt="loader"
@@ -81,11 +112,11 @@ const FileUploader = ({ ownerId, accountId, classNames }: Props) => {
           })}
         </ul>
       )}
-      {isDragActive ? (
+      {/* {isDragActive ? (
         <p>Drop the files here ...</p>
       ) : (
-        <p>Drag 'n' drop some files here, or click to select files</p>
-      )}
+        <p>Drag &apos;n&apos; drop some files here, or click to select files</p>
+      )} */}
     </div>
   );
 };
