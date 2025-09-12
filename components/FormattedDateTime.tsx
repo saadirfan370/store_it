@@ -8,7 +8,7 @@ interface Props {
 
 const FormattedDateTime: React.FC<Props> = ({ className, date }) => {
   return (
-    <div className={cn("body-1 text-lime-200", className)}>
+    <div className={cn("body-1 text-light-200", className)}>
       {formatDateTime(date)}
     </div>
   );

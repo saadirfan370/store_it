@@ -81,10 +81,67 @@ export const getFiles = async () => {
       appwriteConfig.databaseId,
       appwriteConfig.filesCollectionId,
       queries
-    )
+    );
     console.log(files, "files");
     return parseStringify(files);
   } catch (error) {
     handleError(error, "Failed to get files");
+  }
+};
+
+export const renameFile = async ({
+  fileId,
+  name,
+  extension,
+  path,
+}: {
+  fileId: string;
+  name: string;
+  extension: string;
+  path: string;
+}) => {
+  const { databases } = await createAdminClient();
+  try {
+    const newName = `${name}.${extension}`;
+    const UpdateFile = await databases.updateDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.filesCollectionId,
+      fileId,
+      {
+        name: newName,
+      }
+    );
+    revalidatePath(path)
+    return parseStringify(UpdateFile);
+  } catch (error) {
+    handleError(error, "Failed to rename file");
+  }
+};
+
+
+
+export const updateFileUsers = async ({
+  fileId,
+  emails,
+  path,
+}: {
+  fileId: string;
+  emails: string[];
+  path: string;
+}) => {
+  const { databases } = await createAdminClient();
+  try {
+    const UpdateFile = await databases.updateDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.filesCollectionId,
+      fileId,
+      {
+        users: emails,
+      }
+    );
+    revalidatePath(path)
+    return parseStringify(UpdateFile);
+  } catch (error) {
+    handleError(error, "Failed to rename file");
   }
 };
